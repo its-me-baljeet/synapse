@@ -3,9 +3,15 @@
 import { generateSummaryFromGemini } from "@/lib/gemini-ai";
 import { fetchAndExtractPdfText } from "@/lib/langchain";
 import { generateSummaryFromOpenAI } from "@/lib/openai";
+import db from "@/services/prisma";
+import { PDFSummaryType, StorePDFSummaryType } from "@/types";
 // import { getDbConnected } from "@/lib/db";
 import { formatFileNameTitle } from "@/utils/format-utils";
+import { auth } from "@clerk/nextjs/server";
 import crypto from "crypto";
+import { revalidatePath } from "next/cache";
+import { success } from "zod";
+import { id } from "zod/v4/locales";
 
 // Function to generate a deterministic UUID v5 from a string
 function generateUUIDFromString(input: string): string {
@@ -219,3 +225,77 @@ interface PdfSummaryType {
 //     };
 //   }
 // }
+
+async function savePdfSummary({
+      userId,
+      fileUrl,
+      summary,
+      title,
+      fileName,
+    }: PDFSummaryType) {
+  try {
+    const res = await db.pDFSummary.create({
+      data: {
+        user_id: userId,
+        original_file_url: fileUrl,
+        summary_text: summary,
+        status: "COMPLETED",
+        title,
+        file_name: fileName,
+      },
+    });
+    return res;
+  } catch (error) {
+    console.error("Error in savedPdfSummary:", error);
+    throw error;
+    };
+}
+
+export async function storePdfSummaryAction({
+      fileUrl,
+      summary,
+      title,
+      fileName,
+    }: StorePDFSummaryType) {
+  //user logged in
+  //save PDF summary
+  let savedSummary;
+  try {
+    const {userId} = await auth();
+    if(!userId){
+      return {
+        success: false,
+        message: "User not authenticated",
+      };
+    }
+
+    savedSummary = await savePdfSummary({
+      userId,
+      fileUrl,
+      summary,
+      title,
+      fileName,
+    });
+    if(!savedSummary){
+      return {
+        success: false,
+        message: "Failed to save PDF summary",
+      };
+    }
+  } catch (error) {
+    console.error("Error in storePdfSummaryAction:", error);
+    return{
+      success: false,
+      message: error instanceof Error ? error.message : "Error storing summary",
+    }
+  }
+
+  revalidatePath(`/summaries/${savedSummary.id}`);
+  return {
+    success: true,
+    message: "PDF summary saved successfully",
+    data: {
+      id: savedSummary.id,
+    },
+  };
+}

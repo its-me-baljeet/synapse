@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  email String @unique
+  full_name String
+  customer_id String
+  price_id String
+  status UserStatus
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  summaries PDFSummary[]
+  payments Payment[]
+}
+
+model PDFSummary {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  user_id String @db.ObjectId
+  original_file_url String
+  summary_text String
+  status PDFSummaryStatus
+  title String
+  file_name String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model Payment{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  user_email String
+  amount Float
+  stripe_payment_id String
+  price_id String
+  status PaymentStatus
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [user_email], references: [email])
+}
+
+enum PDFSummaryStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}

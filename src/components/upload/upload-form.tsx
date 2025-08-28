@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useUploadThing } from "../../utils/uploadthing";
 import {
   generatePdfSummary,
+  storePdfSummaryAction,
 } from "@/actions/upload-actions";
 import { useRouter } from "next/navigation";
 
@@ -77,7 +78,7 @@ export default function UploadForm() {
         return;
       }
 
-      const fileUrl = resp[0].url;
+      const fileUrl = resp[0].ufsUrl;
       console.log(fileUrl, "File uploaded successfully!");
 
       const result = await generatePdfSummary(fileUrl);
@@ -86,26 +87,30 @@ export default function UploadForm() {
       const { data = null } = result || {};
       if (data) {
         toast.success("🎉 Summary generated successfully!");
+        const res = await storePdfSummaryAction({
+          fileUrl,
+          summary: data.summary,
+          title: data.title,
+          fileName: file.name,
+        });
+        let storeResult;
+        if (data?.summary) {
+          const storedData = {
+            summary: data.summary,
+            fileUrl: resp[0]?.serverData?.file?? fileUrl,
+            title: data.title,
+            fileName: file.name,
+          };
+          storeResult = await storePdfSummaryAction(storedData);
+          if (storeResult?.data?.id) {
+            toast.success("🎉 Summary Saved successfully!");
+            formRef.current?.reset();
+            router.push(`/summaries/${storeResult.data.id}`);
+          } else {
+            toast.error("❌ Failed to save summary.");
+          }
+        }
       }
-
-      // let storeResult;
-      // if (data?.summary) {
-      //   const storedData = {
-      //     summary: data.summary,
-      //     fileUrl: resp[0]?.serverData?.file?.url ?? fileUrl,
-      //     title: data.title,
-      //     fileName: file.name,
-      //   };
-      //   storeResult = await storePdfSummaryAction(storedData);
-      // }
-
-      // if (storeResult?.data?.id) {
-      //   toast.success("🎉 Summary Saved successfully!");
-      //   formRef.current?.reset();
-      //   router.push(`/summaries/${storeResult.data.id}`);
-      // } else {
-      //   toast.error("❌ Failed to save summary.");
-      // }
     } catch (error) {
       toast.dismiss(loadingToastId);
       setIsLoading(false);
