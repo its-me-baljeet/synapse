@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-// import { deleteSummary } from "@/actions/summary-actions";
+import { deleteSummaryAction } from "@/actions/summary-actions";
 
 interface DeleteButtonProps {
   summaryId: string;
@@ -24,17 +24,17 @@ export default function DeleteButton({ summaryId }: DeleteButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition(); // Track async state
 
-  const handleDelete = () => {
-    // startTransition(async () => {
-    //   const result = await deleteSummary({ summaryId });
+  const handleDelete = async () => {
+    startTransition(async () => {
+      const result = await deleteSummaryAction(summaryId);
 
-    //   if (result?.success) {
-    //     toast.success("Summary deleted successfully!");
-    //     setIsOpen(false);
-    //   } else {
-    //     toast.error("Failed to delete summary. Try again.");
-    //   }
-    // });
+      if (result?.success) {
+        toast.success("Summary deleted successfully!");
+        setIsOpen(false);
+      } else {
+        toast.error("Failed to delete summary. Try again.");
+      }
+    });
   };
 
   return (

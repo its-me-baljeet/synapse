@@ -1,4 +1,5 @@
 import BgGradient from "@/components/common/bg-gradient";
+import EmptySummaryState from "@/components/summaries/empty-summary";
 import SummaryCard from "@/components/summaries/summary-card";
 import { Button } from "@/components/ui/button";
 import { getSummaries } from "@/lib/summaries";
@@ -40,20 +41,22 @@ export default async function page() {
             </Button>
           </div>
         </div>
-        <div className="bg-rose-50 p-5 text-rose-800 border border-rose-200 rounded-lg text-sm">
-          <p>You have reached your Limit of {uploadLimit} summary uploads.</p>
-          <Link
-            href={"/#pricing"}
-            className="font-semibold underline underline-offset-8 inline-flex items-center"
-          >
-            Upgrade your plan to Pro!{" "}
-            <ArrowRight className="inline-block h-4 w-4 ml-1" /> {""}
-          </Link>
-          for unlimited uploads
-        </div>
+        {summaries.length >= uploadLimit && (
+          <div className="bg-rose-50 p-5 text-rose-800 border border-rose-200 rounded-lg text-sm">
+            <p>You have reached your Limit of {uploadLimit} summary uploads.</p>
+            <Link
+              href={"/#pricing"}
+              className="font-semibold underline underline-offset-8 inline-flex items-center"
+            >
+              Upgrade your plan to Pro!{" "}
+              <ArrowRight className="inline-block h-4 w-4 ml-1" /> {""}
+            </Link>
+            for unlimited uploads
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {summaries.length === 0 ? (
-            <p className="text-center text-gray-500">No summaries found.</p>
+            <EmptySummaryState />
           ) : (
             summaries.map((summary) => (
               <SummaryCard key={summary.id} summary={summary} />

@@ -1,12 +1,13 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { FileText } from "lucide-react";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
+import { FileText } from "lucide-react";
+import Link from "next/link";
 import DeleteButton from "./delete-button";
+import { formatFileNameTitle } from "@/utils/format-utils";
 
 const SummaryHeader = ({
   fileUrl,
@@ -22,10 +23,10 @@ const SummaryHeader = ({
       <FileText className="w-5 h-5 sm:w-7 sm:h-7 text-rose-400 mt-1" />
       <div className="flex-1 min-w-0">
         <h3 className="text-sm sm:text-base xl:text-lg font-semibold text-gray-900 truncate w-4/5">
-          {title || "Untitled"}
+          {title || formatFileNameTitle(fileUrl)}
         </h3>
         <p className="text-xs sm:text-sm text-gray-500">
-          {createdAt ? format(new Date(createdAt), "PPP") : "No Date"}
+          {createdAt ? formatDistanceToNow(new Date (createdAt), {addSuffix: true }) : "No Date"}
         </p>
       </div>
     </div>
@@ -66,7 +67,7 @@ export default function SummaryCard({ summary }: { summary: any }) {
           <div className="flex flex-col gap-2 sm:gap-3">
             <SummaryHeader
               fileUrl={summary.original_file_url}
-              title={summary.title}
+              title={summary.file_name}
               createdAt={summary.created_at}
             />
 
