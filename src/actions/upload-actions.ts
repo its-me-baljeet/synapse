@@ -10,27 +10,27 @@ import { formatFileNameTitle } from "@/utils/format-utils";
 import { auth } from "@clerk/nextjs/server";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
-import { success } from "zod";
+// import { success } from "zod";
 import { id } from "zod/v4/locales";
 
 // Function to generate a deterministic UUID v5 from a string
-function generateUUIDFromString(input: string): string {
-  // Use a fixed namespace UUID (this is an example namespace)
-  const NAMESPACE = "1b671a64-40d5-491e-99b0-da01ff1f3341";
+// function generateUUIDFromString(input: string): string {
+//   // Use a fixed namespace UUID (this is an example namespace)
+//   const NAMESPACE = "1b671a64-40d5-491e-99b0-da01ff1f3341";
 
-  // Generate a UUID v5 from the input string
-  const uuid = crypto
-    .createHash("sha1")
-    .update(NAMESPACE)
-    .update(input)
-    .digest("hex");
+//   // Generate a UUID v5 from the input string
+//   const uuid = crypto
+//     .createHash("sha1")
+//     .update(NAMESPACE)
+//     .update(input)
+//     .digest("hex");
 
-  // Format as UUID
-  return `${uuid.slice(0, 8)}-${uuid.slice(8, 12)}-${uuid.slice(
-    12,
-    16
-  )}-${uuid.slice(16, 20)}-${uuid.slice(20, 32)}`;
-}
+//   // Format as UUID
+//   return `${uuid.slice(0, 8)}-${uuid.slice(8, 12)}-${uuid.slice(
+//     12,
+//     16
+//   )}-${uuid.slice(16, 20)}-${uuid.slice(20, 32)}`;
+// }
 
 export async function generatePdfSummary(uploadResponse: any) {
   console.log("Raw Upload Response:", uploadResponse);
@@ -227,12 +227,12 @@ interface PdfSummaryType {
 // }
 
 async function savePdfSummary({
-      userId,
-      fileUrl,
-      summary,
-      title,
-      fileName,
-    }: PDFSummaryType) {
+  userId,
+  fileUrl,
+  summary,
+  title,
+  fileName,
+}: PDFSummaryType) {
   try {
     const res = await db.pDFSummary.create({
       data: {
@@ -248,21 +248,23 @@ async function savePdfSummary({
   } catch (error) {
     console.error("Error in savedPdfSummary:", error);
     throw error;
-    };
+  }
 }
 
 export async function storePdfSummaryAction({
-      fileUrl,
-      summary,
-      title,
-      fileName,
-    }: StorePDFSummaryType) {
+  fileUrl,
+  summary,
+  title,
+  fileName,
+}: StorePDFSummaryType) {
   //user logged in
   //save PDF summary
   let savedSummary;
   try {
-    const {userId} = await auth();
-    if(!userId){
+    const { userId } = await auth();
+    console.log(">>> Inserting into DB:", { userId, fileName, fileUrl });
+
+    if (!userId) {
       return {
         success: false,
         message: "User not authenticated",
@@ -276,7 +278,7 @@ export async function storePdfSummaryAction({
       title,
       fileName,
     });
-    if(!savedSummary){
+    if (!savedSummary) {
       return {
         success: false,
         message: "Failed to save PDF summary",
@@ -284,10 +286,10 @@ export async function storePdfSummaryAction({
     }
   } catch (error) {
     console.error("Error in storePdfSummaryAction:", error);
-    return{
+    return {
       success: false,
       message: error instanceof Error ? error.message : "Error storing summary",
-    }
+    };
   }
 
   revalidatePath(`/summaries/${savedSummary.id}`);

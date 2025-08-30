@@ -1,6 +1,5 @@
 "use client";
 import { useRef, useState } from "react";
-import UploadFormInput from "@/components/upload/upload-form-input";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useUploadThing } from "../../utils/uploadthing";
@@ -9,6 +8,7 @@ import {
   storePdfSummaryAction,
 } from "@/actions/upload-actions";
 import { useRouter } from "next/navigation";
+import UploadFormInput from "./upload-form-input";
 
 const schema = z.object({
   file: z
@@ -60,7 +60,7 @@ export default function UploadForm() {
       const errorMessage = validatedFields.error.issues
         .map((err) => err.message)
         .join(", ");
-      toast.error(`⚠️ ${errorMessage}`);
+      toast.error(` ${errorMessage}`);
       console.error(errorMessage);
       return;
     }
@@ -73,8 +73,8 @@ export default function UploadForm() {
       toast.dismiss(loadingToastId);
       setIsLoading(false);
 
-      if (!resp || resp.length === 0 || !resp[0]?.url) {
-        toast.error("❌ Upload failed. No file URL returned.");
+      if (!resp || resp.length === 0 || !resp[0]?.ufsUrl) {
+        toast.error("Upload failed. No file URL returned.");
         return;
       }
 
@@ -85,36 +85,27 @@ export default function UploadForm() {
       console.log(result, "Summary generated");
 
       const { data = null } = result || {};
-      if (data) {
-        toast.success("🎉 Summary generated successfully!");
-        const res = await storePdfSummaryAction({
-          fileUrl,
+      if (data?.summary) {
+        const storedData = {
           summary: data.summary,
+          fileUrl: resp[0]?.serverData?.file ?? fileUrl,
           title: data.title,
           fileName: file.name,
-        });
-        let storeResult;
-        if (data?.summary) {
-          const storedData = {
-            summary: data.summary,
-            fileUrl: resp[0]?.serverData?.file?? fileUrl,
-            title: data.title,
-            fileName: file.name,
-          };
-          storeResult = await storePdfSummaryAction(storedData);
-          if (storeResult?.data?.id) {
-            toast.success("🎉 Summary Saved successfully!");
-            formRef.current?.reset();
-            router.push(`/summaries/${storeResult.data.id}`);
-          } else {
-            toast.error("❌ Failed to save summary.");
-          }
+        };
+        const storeResult = await storePdfSummaryAction(storedData);
+
+        if (storeResult?.data?.id) {
+          toast.success("🎉 Summary Saved successfully!");
+          formRef.current?.reset();
+          router.push(`/summaries/${storeResult.data.id}`);
+        } else {
+          toast.error("❌ Failed to save summary.");
         }
       }
     } catch (error) {
       toast.dismiss(loadingToastId);
       setIsLoading(false);
-      toast.error("❌ Upload failed with an exception.");
+      toast.error("Upload failed with an exception.");
       console.error("Upload exception:", error);
     } finally {
       setIsLoading(false);

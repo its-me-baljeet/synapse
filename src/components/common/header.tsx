@@ -1,9 +1,7 @@
 "use client";
-import { FileText } from "lucide-react";
-import { useState } from "react";
-import { Button } from "../ui/button";
-import NavLink from "./nav-link";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { FileText } from "lucide-react";
+import NavLink from "./nav-link";
 
 export default function Header() {
   return (
